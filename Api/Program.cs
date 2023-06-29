@@ -1,15 +1,31 @@
-var builder = WebApplication.CreateBuilder(args);
+using Api.Extensions;
+using Database;
+using Microsoft.EntityFrameworkCore;
+using Serilog;
 
-// Add services to the container.
+
+var builder = WebApplication.CreateBuilder(args);
+// Add logger
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .WriteTo.Console()
+    .CreateLogger();
+builder.Host.UseSerilog();
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddDbContext<SchoolDataContext>(options =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("Default");
+    options.UseSqlServer(connectionString);
+});
+builder.Services.AddRepositories();
+builder.Services.AddCustomServices();
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
